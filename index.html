@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Super Sorter</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@900&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1208;
+    --paper: #f5f0e8;
+    --accent: #c8392b;
+    --rule: #d4c9b0;
+    --shadow: #b8a98a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Courier Prime', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background-image:
+      repeating-linear-gradient(
+        transparent,
+        transparent 31px,
+        var(--rule) 31px,
+        var(--rule) 32px
+      );
+    background-size: 100% 32px;
+    background-position: 0 -8px;
+  }
+
+  .card {
+    background: var(--paper);
+    border: 2px solid var(--ink);
+    box-shadow: 6px 6px 0 var(--shadow);
+    padding: 2.5rem 3rem;
+    width: 100%;
+    max-width: 560px;
+    position: relative;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 2.5rem;
+    width: 2px;
+    height: 100%;
+    background: var(--accent);
+    opacity: 0.6;
+  }
+
+  .title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.8rem;
+    line-height: 1;
+    letter-spacing: -1px;
+    margin-bottom: 0.2rem;
+  }
+
+  .title span { color: var(--accent); }
+
+  .subtitle {
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--shadow);
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 1rem;
+  }
+
+  label {
+    display: block;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+    color: var(--shadow);
+  }
+
+  .input-row {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  input[type="text"] {
+    flex: 1;
+    font-family: 'Courier Prime', monospace;
+    font-size: 1.15rem;
+    padding: 0.6rem 0.75rem;
+    border: 2px solid var(--ink);
+    background: white;
+    color: var(--ink);
+    outline: none;
+    transition: box-shadow 0.15s;
+    letter-spacing: 0.08em;
+  }
+
+  input[type="text"]:focus {
+    box-shadow: 3px 3px 0 var(--accent);
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  button {
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.6rem 1.1rem;
+    background: var(--ink);
+    color: var(--paper);
+    border: 2px solid var(--ink);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+    white-space: nowrap;
+  }
+
+  button:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 3px 3px 0 var(--ink);
+  }
+
+  button:active {
+    transform: translate(2px, 2px);
+    box-shadow: none;
+  }
+
+  button.secondary {
+    background: transparent;
+    color: var(--ink);
+  }
+
+  button.secondary:hover {
+    background: var(--accent);
+    color: var(--paper);
+    border-color: var(--accent);
+  }
+
+  .result-section {
+    border-top: 2px solid var(--ink);
+    padding-top: 1.25rem;
+    margin-top: 0.5rem;
+  }
+
+  .result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.75rem;
+  }
+
+  .result-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--shadow);
+  }
+
+  .word-count {
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: var(--shadow);
+  }
+
+  .word-list {
+    list-style: none;
+    max-height: 320px;
+    overflow-y: auto;
+  }
+
+  .word-list::-webkit-scrollbar { width: 4px; }
+  .word-list::-webkit-scrollbar-track { background: transparent; }
+  .word-list::-webkit-scrollbar-thumb { background: var(--rule); }
+
+  .word-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.45rem 0;
+    border-bottom: 1px solid var(--rule);
+    animation: slideIn 0.25s ease both;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .word-index {
+    font-size: 0.65rem;
+    color: var(--shadow);
+    min-width: 1.5rem;
+    letter-spacing: 0.05em;
+  }
+
+  .word-text {
+    flex: 1;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding-left: 0.5rem;
+  }
+
+  .word-text .first-letter {
+    color: var(--accent);
+    font-family: 'Playfair Display', serif;
+  }
+
+  .delete-btn {
+    background: none !important;
+    border: none !important;
+    color: var(--rule);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0 0.25rem;
+    line-height: 1;
+    transition: color 0.15s;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  .delete-btn:hover {
+    color: var(--accent) !important;
+    box-shadow: none !important;
+  }
+
+  .empty-msg {
+    font-size: 0.85rem;
+    color: var(--shadow);
+    font-style: italic;
+    padding: 0.5rem 0;
+  }
+
+  .emoji-flyer {
+    position: fixed;
+    font-size: 3rem;
+    pointer-events: none;
+    z-index: 9999;
+    animation: flyAcross 2s ease-in-out forwards;
+    top: 45%;
+  }
+
+  @keyframes flyAcross {
+    0%   { left: -80px; opacity: 0; transform: scale(0.5) rotate(0deg); }
+    10%  { opacity: 1; transform: scale(1.3) rotate(72deg); }
+    50%  { transform: scale(1.1) rotate(360deg); }
+    90%  { opacity: 1; transform: scale(1) rotate(648deg); }
+    100% { left: calc(100vw + 80px); opacity: 0; transform: scale(0.8) rotate(720deg); }
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="title">Super<span>Sorter</span></div>
+  <div class="subtitle">Alphabetical word list</div>
+
+  <label for="wordInput">Enter a word</label>
+  <div class="input-row">
+    <input type="text" id="wordInput" placeholder="e.g. banana" maxlength="40" autocomplete="off" spellcheck="false">
+  </div>
+  <div class="btn-row" style="margin-bottom:1.5rem; gap:0.5rem; display:flex;">
+    <button onclick="addWord()">Add</button>
+    <button class="secondary" onclick="clearAll()">Clear</button>
+  </div>
+
+  <div class="result-section">
+    <div class="result-header">
+      <div class="result-label">Sorted list</div>
+      <div class="word-count" id="wordCount"></div>
+    </div>
+    <ul class="word-list" id="wordList">
+      <li class="empty-msg">No words yet — add one above!</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+  const input = document.getElementById('wordInput');
+  const wordList = document.getElementById('wordList');
+  const wordCount = document.getElementById('wordCount');
+
+  let words = [];
+
+  const emojiMap = {
+    apple: '🍎', banana: '🍌', cherry: '🍒', grape: '🍇', lemon: '🍋',
+    orange: '🍊', strawberry: '🍓', watermelon: '🍉', pizza: '🍕', burger: '🍔',
+    taco: '🌮', sushi: '🍣', cake: '🎂', cookie: '🍪', donut: '🍩',
+    coffee: '☕', beer: '🍺', wine: '🍷', milk: '🥛', tea: '🍵',
+    cat: '🐱', dog: '🐶', fish: '🐟', bird: '🐦', rabbit: '🐰',
+    lion: '🦁', tiger: '🐯', bear: '🐻', fox: '🦊', wolf: '🐺',
+    horse: '🐴', cow: '🐮', pig: '🐷', frog: '🐸', monkey: '🐵',
+    elephant: '🐘', penguin: '🐧', snake: '🐍', turtle: '🐢', shark: '🦈',
+    sun: '☀️', moon: '🌙', star: '⭐', cloud: '☁️', rain: '🌧️',
+    snow: '❄️', fire: '🔥', rainbow: '🌈', earth: '🌍', flower: '🌸',
+    tree: '🌳', cactus: '🌵', rose: '🌹', tulip: '🌷', mushroom: '🍄',
+    car: '🚗', bus: '🚌', plane: '✈️', rocket: '🚀', boat: '⛵',
+    train: '🚂', bike: '🚲', helicopter: '🚁', submarine: '🚢', truck: '🚚',
+    house: '🏠', school: '🏫', hospital: '🏥', castle: '🏰', tent: '⛺',
+    heart: '❤️', diamond: '💎', crown: '👑', trophy: '🏆', gift: '🎁',
+    music: '🎵', guitar: '🎸', drum: '🥁', piano: '🎹', violin: '🎻',
+    book: '📚', pencil: '✏️', computer: '💻', phone: '📱', camera: '📷',
+    sword: '⚔️', shield: '🛡️', bomb: '💣', ghost: '👻', skull: '💀',
+    alien: '👽', robot: '🤖', wizard: '🧙', dragon: '🐉', unicorn: '🦄',
+    football: '🏈', basketball: '🏀', soccer: '⚽', tennis: '🎾', baseball: '⚾',
+    money: '💰', key: '🔑', lock: '🔒', clock: '⏰', bell: '🔔',
+    hammer: '🔨', wrench: '🔧', scissors: '✂️', umbrella: '☂️', glasses: '👓',
+    bread: '🍞', egg: '🥚', cheese: '🧀', carrot: '🥕', corn: '🌽',
+    potato: '🥔', tomato: '🍅', broccoli: '🥦', pineapple: '🍍', mango: '🥭',
+    peach: '🍑', pear: '🍐', kiwi: '🥝', coconut: '🥥', avocado: '🥑',
+    butterfly: '🦋', bee: '🐝', ant: '🐜', spider: '🕷️', snail: '🐌',
+    whale: '🐋', dolphin: '🐬', octopus: '🐙', crab: '🦀', lobster: '🦞',
+    mountain: '⛰️', volcano: '🌋', island: '🏝️', desert: '🏜️', forest: '🌲',
+    baby: '👶', boy: '👦', girl: '👧', man: '👨', woman: '👩',
+    king: '🤴', queen: '👸', santa: '🎅', clown: '🤡', zombie: '🧟',
+    poop: '💩', rainbow: '🌈', sparkle: '✨', lightning: '⚡', tornado: '🌪️',
+  };
+
+  function flyEmoji(word) {
+    const emoji = emojiMap[word.toLowerCase()];
+    if (!emoji) return;
+    const el = document.createElement('span');
+    el.className = 'emoji-flyer';
+    el.textContent = emoji;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2100);
+  }
+
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') addWord(); });
+
+  function addWord() {
+    const raw = input.value.trim();
+    if (!raw) return;
+    flyEmoji(raw);
+    words.push(raw);
+    words.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+    input.value = '';
+    input.focus();
+    render();
+  }
+
+  function removeWord(index) {
+    words.splice(index, 1);
+    render();
+  }
+
+  function clearAll() {
+    words = [];
+    render();
+  }
+
+  function render() {
+    wordCount.textContent = words.length ? `${words.length} word${words.length !== 1 ? 's' : ''}` : '';
+
+    if (words.length === 0) {
+      wordList.innerHTML = '<li class="empty-msg">No words yet — add one above!</li>';
+      return;
+    }
+
+    wordList.innerHTML = '';
+    words.forEach((word, i) => {
+      const li = document.createElement('li');
+      li.className = 'word-item';
+      li.style.animationDelay = `${i * 0.03}s`;
+
+      const first = word[0];
+      const rest = word.slice(1);
+
+      li.innerHTML = `
+        <span class="word-index">${i + 1}.</span>
+        <span class="word-text"><span class="first-letter">${first}</span>${rest}</span>
+        <button class="delete-btn" onclick="removeWord(${i})" title="Remove">✕</button>
+      `;
+      wordList.appendChild(li);
+    });
+  }
+</script>
+</body>
+  </html>
